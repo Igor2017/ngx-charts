@@ -27,6 +27,7 @@ import { Gradient } from '../common/types/gradient.interface';
       stroke="none"
       role="img"
       tabIndex="-1"
+      [style.filter]="getFilter()"
       [class.active]="isActive"
       [class.hidden]="hideBar"
       [attr.d]="path"
@@ -35,10 +36,12 @@ import { Gradient } from '../common/types/gradient.interface';
       (click)="select.emit(data)"
     />
   `,
+  styleUrls: ['./bar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BarComponent implements OnChanges {
   @Input() fill: string;
+  @Input() filter: number;
   @Input() data: DataItem;
   @Input() width: number;
   @Input() height: number;
@@ -66,8 +69,8 @@ export class BarComponent implements OnChanges {
   hasGradient: boolean = false;
   hideBar: boolean = false;
 
-  constructor(element: ElementRef) {
-    this.element = element.nativeElement;
+  constructor(private host: ElementRef) {
+    this.element = host.nativeElement;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -75,6 +78,14 @@ export class BarComponent implements OnChanges {
       this.loadAnimation();
     }
     this.update();
+  }
+
+  getFilter(): string | null {
+    if (this.filter) {
+      return 'brightness(' + this.filter.toFixed(3) + '%)';
+    } else {
+      return null;
+    }
   }
 
   update(): void {

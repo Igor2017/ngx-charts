@@ -13,11 +13,15 @@ import { Color, colorSets } from '../utils/color-sets';
 import { StringOrNumberOrDate } from '../models/chart-data.model';
 import { ScaleType } from './types/scale-type.enum';
 import { Gradient } from './types/gradient.interface';
+import { Subject } from 'rxjs';
 
 export class ColorHelper {
   scale: any;
   scaleType: ScaleType;
   colorDomain: string[];
+  filters?: number[];
+  hovers?: boolean[];
+  manual_hover$?: Subject<any>;
   domain: number[] | string[];
   customColors: any;
 
@@ -28,6 +32,9 @@ export class ColorHelper {
       });
     }
     this.colorDomain = scheme.domain;
+    this.filters = scheme.filters;
+    this.hovers = scheme.hovers;
+    this.manual_hover$ = scheme.manual_hover$;
     this.scaleType = type;
     this.domain = domain;
     this.customColors = customColors;

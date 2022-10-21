@@ -1,10 +1,14 @@
 import { ScaleType } from '../common/types/scale-type.enum';
+import { Subject } from 'rxjs';
 
 export interface Color {
   name: string;
   selectable: boolean;
   group: ScaleType;
   domain: string[];
+  filters?: number[];
+  hovers?: boolean[];
+  manual_hover$?: Subject<any>;
 }
 
 export const colorSets: Color[] = [

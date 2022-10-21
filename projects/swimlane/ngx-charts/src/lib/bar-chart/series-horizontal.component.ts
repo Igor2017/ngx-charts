@@ -6,7 +6,7 @@ import {
   OnChanges,
   SimpleChanges,
   ChangeDetectionStrategy,
-  TemplateRef
+  TemplateRef, ViewChildren, ElementRef, QueryList, OnInit, OnDestroy, ChangeDetectorRef,
 } from '@angular/core';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { formatLabel, escapeLabel } from '../common/label.helper';
@@ -20,19 +20,24 @@ import { D0Types } from './types/d0-type.enum';
 import { ViewDimensions } from '../common/types/view-dimension.interface';
 import { BarOrientation } from '../common/types/bar-orientation.enum';
 import { ScaleType } from '../common/types/scale-type.enum';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'g[ngx-charts-series-horizontal]',
   template: `
     <svg:g
+      #bars
+      id="{{bar.label}}"
       ngx-charts-bar
-      *ngFor="let bar of bars; trackBy: trackBy"
+      *ngFor="let bar of bars; let i = index; trackBy: trackBy"
       [@animationState]="'active'"
       [width]="bar.width"
       [height]="bar.height"
       [x]="bar.x"
       [y]="bar.y"
       [fill]="bar.color"
+      [class.manual-hover]="colors?.hovers ? colors?.hovers[i] : false"
+      [filter]="colors?.filters ? colors?.filters[i] : 0"
       [stops]="bar.gradientStops"
       [data]="bar.data"
       [orientation]="barOrientation.Horizontal"
@@ -42,8 +47,8 @@ import { ScaleType } from '../common/types/scale-type.enum';
       [isActive]="isActive(bar.data)"
       [ariaLabel]="bar.ariaLabel"
       [animations]="animations"
-      (activate)="activate.emit($event)"
-      (deactivate)="deactivate.emit($event)"
+      (activate)="doActivate($event)"
+      (deactivate)="doDeactivate($event)"
       ngx-tooltip
       [tooltipDisabled]="tooltipDisabled"
       [tooltipPlacement]="tooltipPlacement"
@@ -68,6 +73,7 @@ import { ScaleType } from '../common/types/scale-type.enum';
       />
     </svg:g>
   `,
+  styleUrls: ['./series-horizontal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('animationState', [
@@ -80,7 +86,7 @@ import { ScaleType } from '../common/types/scale-type.enum';
     ])
   ]
 })
-export class SeriesHorizontal implements OnChanges {
+export class SeriesHorizontal implements OnChanges, OnInit, OnDestroy {
   @Input() dims: ViewDimensions;
   @Input() type: BarChartType = BarChartType.Standard;
   @Input() series: DataItem[];
@@ -109,6 +115,24 @@ export class SeriesHorizontal implements OnChanges {
   barsForDataLabels: Array<{ x: number; y: number; width: number; height: number; total: number; series: string }> = [];
 
   barOrientation = BarOrientation;
+  @ViewChildren('bars') barsRefs: QueryList<any>;
+  subs: Subscription;
+
+  constructor(private cdr: ChangeDetectorRef) { }
+
+  ngOnInit(): void {
+    if (this.colors.manual_hover$) {
+      // console.log('Подписываемся на manual_hover$');
+      this.subs = this.colors.manual_hover$.subscribe(({index, hover}) => {
+        this.colors.hovers[index] = hover;
+        this.cdr.markForCheck();
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subs?.unsubscribe();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     this.update();
@@ -282,6 +306,33 @@ export class SeriesHorizontal implements OnChanges {
   }
 
   click(data: DataItem): void {
-    this.select.emit(data);
+    const anchorRef = this.barsRefs.find((item: any) => {
+      return item.element?.id === data.name;
+    });
+    if (anchorRef?.host) {
+      this.select.emit({data, anchor: anchorRef.host} as any);
+    } else {
+      this.select.emit(data);
+    }
+  }
+
+  doActivate(event: DataItem): void {
+    if (this.colors.hovers) {
+      const index = this.series.findIndex((s: DataItem) => event === s);
+      if (index !== -1) {
+        this.colors.hovers[index] = true;
+      }
+    }
+    this.activate.emit(event);
+  }
+
+  doDeactivate(event: DataItem) {
+    if (this.colors.hovers) {
+      const index = this.series.findIndex((s: DataItem) => event === s);
+      if (index !== -1) {
+        this.colors.hovers[index] = false;
+      }
+    }
+    this.deactivate.emit(event);
   }
 }
