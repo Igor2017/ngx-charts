@@ -6,7 +6,7 @@ import {
   OnChanges,
   SimpleChanges,
   ChangeDetectionStrategy,
-  TemplateRef, ViewChildren, ElementRef, QueryList, OnInit, OnDestroy, ChangeDetectorRef,
+  TemplateRef, ViewChildren, QueryList, OnInit, OnDestroy, ChangeDetectorRef,
 } from '@angular/core';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { formatLabel, escapeLabel } from '../common/label.helper';

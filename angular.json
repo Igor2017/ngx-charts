@@ -121,7 +121,7 @@
         }
       }
     },
-    "@swimlane/ngx-charts": {
+    "@igor2017/ngx-charts": {
       "projectType": "library",
       "root": "projects/swimlane/ngx-charts",
       "sourceRoot": "projects/swimlane/ngx-charts/src",
